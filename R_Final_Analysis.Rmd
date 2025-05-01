@@ -1,0 +1,517 @@
+---
+title: "Homework 10 - Final Exam"
+subtitle: INFS 691
+author: "Rose Dunderdale"
+output:
+  html_notebook: default
+---
+
+carSeats69NA.csv contains data about the sales of carseats. 
+In this data set, a single observation represents a location 
+where carseats are sold.  
+In particular the data set consists of the following variables:
+
+sales       : Unit sales (in thousands) at each location
+compPrice   : Price charged by competitor at each location
+income      : Community income level (in thousands of dollars)
+advertising : Local advertising budget for company at each location 
+              (in thousands of dollars)
+population  : Population size in region (in thousands)
+price-Price : Company charges for car seats at each site
+shelveLoc   : A factor with levels Bad, Good and Medium indicating 
+              the quality of the shelving location for the car seats 
+              at each site
+age         : Average age of the local population
+education   : Education level at each location
+location    : A factor with levels Urban and Rural to indicate whether 
+              the store is in an urban or rural location
+country     : A factor with levels USA and Other to indicate whether 
+              the store is in the USA or not
+
+### INITIAL WORK
+(0) Do the following:
+(a) Download the following files:
+    carSeats691NA.csv     
+    plots SV.docx     
+    courses.csv     
+    echo691.csv  
+
+(b) Read the data set in "carSeats691NA.csv" and assign it to the object "seat".
+```{r}
+seat <- read.csv("carSeats691NA.csv")
+```
+
+#### PLOTS USING ggplot2
+
+Create the graphs using "ggplot2" package (The visuals for the plots are
+given in the "plots.docx" file)
+
+(1) Display the scatterplot of sales vs price with a linear line,
+    no confidence interval for each shelveLoc level separately.   
+    Use different colors for the plots for each shelveLoc level.
+    (See "plots SV.docx" file for the display of the plot).
+```{r}
+library(ggplot2)
+
+ggplot(seat, aes(x = price, y = sales, color = shelveLoc)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  facet_wrap(~shelveLoc) +
+  labs(title = "Sales vs Price by Shelving Location")
+
+```
+
+#### DATA MANIPULATION by built-in FUNCTIONS in R 
+#### "for" LOOOPS and "if" STATEMENTS as needed.
+
+Anne R has prepared an Excel table containing information
+about the courses she has taken or registered. 
+
+Prefix	Number	Registered	Score
+ISSCM	   491	   5-May-20	   83
+INFS	   691	   2-Jan-21	   94
+BSAD	   443	  15-Jul-20	   99
+INFS	   592	  21-Jan-21	   88
+
+She has saved this Excel file as a CSV (comma delimited) file
+named as "courses.csv". Some scores listed are the expected scores.
+
+(2) Read this csv file into R, assign it to the object "course", and
+display observations in "course" data frame.
+```{r}
+course <- read.csv("courses.csv")
+course
+```
+
+(3) Display the structure of the "course" data frame.
+```{r}
+str(course)
+```
+
+(4) What is the data type of Registered variable?        
+**Answer**: It is a character data type.       
+
+
+(5a) Change the values in Registered column to date objects.
+    You need to use the "lubridate" package. 
+```{r}
+# install.packages("lubridate")
+library(lubridate)
+course$registered <- mdy(course$registered)
+
+```
+
+(5b) Display the structure of the "course" again to see if the 
+    values in Registered column are changed to date objects.
+```{r}
+str(course)
+```
+
+(6) Display the list of the courses Anne registered before 2021-01-02.
+    Need to write your code that will select the courses registered
+    before 2021-01-02 so that this statement will work even if she 
+    has listed 14 courses in the data frame.
+    course[c(1,3),] or course[-c(2,4),] are not acceptable. 
+```{r}
+course[course$registered < as.Date("2021-01-02"), ]
+```
+
+(7) Create a vector "grade" that contains the letter grades 
+assigned according to the following grade scale for the scores:
+score             grade
+93 and higher       A
+80 and under 93     B
+70 and under 80     C
+less than 70        D
+```{r}
+grade <- ifelse(course$score >= 93, "A",
+         ifelse(course$score >= 80, "B",
+         ifelse(course$score >= 70, "C", "D")))
+```
+
+(8) Add "grade" vector as a new column to the "course" data frame.
+```{r}
+course$grade <- grade
+course
+```
+
+(9) Using the "for" loop and "if" statement, count the number of "A" and
+    "B" grades. The R code table(course$grade) gives the answer, 
+    but this statement is not acceptable. 
+    
+Present the result/output showing the number of grades "A" and "B".
+```{r}
+countA <- 0
+countB <- 0
+for (g in course$grade) {
+  if (g == "A") {
+    countA <- countA + 1
+  } else if (g == "B") {
+    countB <- countB + 1
+  }
+}
+cat("Number of A grades:", countA, "\n")
+cat("Number of B grades:", countB, "\n")
+
+```
+
+#### DATA MANIPULATION by dplyr package
+
+Complete the following data manipulation tasks using the "dplyr" 
+package on carSeats69NA.csv data. 
+You have already read this data as
+seat <- read.csv("carSeats691NA.csv") during the initial work.
+The R codes in this part should use the pipeline operator %>%.
+
+(10) Load the dplyr library functions
+```{r}
+library(dplyr)
+```
+
+(11)	Select sales, price, compPrice, and shelveLoc for observations 
+      with shelveLoc "Good" and country "USA" and display the result.
+```{r}
+seat %>%
+  filter(shelveLoc == "Good", country == "USA") %>%
+  select(sales, price, compPrice, shelveLoc)
+```
+
+(12) Create a new variable revenue = sales * price and **add** it as a 
+      new column to the "seat" data frame.
+```{r}
+seat <- seat %>%
+  mutate(revenue = sales * price)
+```
+
+(13) Display the first 6 rows of the "seat" data frame and check to see if
+      the new variable/vector "revenue" is added to the "seat" data frame.
+      If it is not added, then correct your answer in Question 12 so that 
+      the new column "revenue" will be added as the last column.    
+Note: If "revenue" is displayed when you executed your code in question
+      12,it does not necessarily mean that the "revenue" column is added. 
+      If it were added, it would have been displayed in Question 13.
+```{r}
+head(seat)
+```
+
+(14)	For each shelveLoc, display the minimum sales (minS), 
+      maximum sales (maxS), mean sales (meanS) and also display
+      a new column diffM=maxS-minS.
+```{r}
+seat %>%
+  group_by(shelveLoc) %>%
+  summarise(
+    minS = min(sales, na.rm = TRUE),
+    maxS = max(sales, na.rm = TRUE),
+    meanS = mean(sales, na.rm = TRUE),
+    diffM = max(sales, na.rm = TRUE) - min(sales, na.rm = TRUE)
+  )
+```
+
+#### FUNCTIONS
+In this part, you will write functions to run on a vector. You will run 
+your functions on the following vector:
+vec <- c(3, 9, 4, 5, 7, NA, 8, 5)
+
+(14) Execute the code chunk below to create the vector "vec".
+```{r}
+vec <- c(3, 9, 4, 5, 7, NA, 8, 5)
+```
+
+(15) Write a function that will determine if the number is less than 5,
+    more than 5, or equal to 5. 
+    - Name the function as "moreLessEq" to return "LESS", "MORE", or "EQUAL"
+    - Run this function on vector "vec" to see the result.
+```{r}
+moreLessEq <- function(x) {
+  if (is.na(x)) return(NA)
+  if (x < 5) return("LESS")
+  else if (x > 5) return("MORE")
+  else return("EQUAL")
+}
+sapply(vec, moreLessEq)
+```
+
+(16) Write a function that will count the number of even values in a vector.
+    - Name the function as "countEven" to return the count of even numbers 
+      in the vector.       
+    - Run this function on vector "vec" to display the result.
+```{r}
+countEven <- function(v) {
+  sum(!is.na(v) & v %% 2 == 0)
+}
+countEven(vec)
+```
+
+(17) Write a function "mySummary" that   
+    - calculates the following three summary values for a vector:     
+      count, mean, and standard deviation.
+    Your function should consider the missing values (NA) in the vector.
+```{r}
+mySummary <- function(v) {
+  c(
+    count = sum(!is.na(v)),
+    mean = mean(v, na.rm = TRUE),
+    sd = sd(v, na.rm = TRUE)
+  )
+}
+```
+
+(18) Run this function "mySummary" on vector "vec" to display the result. 
+```{r}
+mySummary(vec)
+```
+
+#### apply() function
+(19) Use the apply() function to obtain the median of the values
+     for each column (variable) in the "seat" data frame. 
+     Make sure that the medians are calculated for each numerical column.
+```{r}
+apply(seat[sapply(seat, is.numeric)], 2, median, na.rm = TRUE)
+```
+
+(20) Use the apply() function and the function "mySummary" to display
+     the three summary values for each numerical column (variable) in 
+     "seat" data frame.       
+    Note: The mean and standard deviation cannot be calculated for the
+    categorical variables (factor data types).
+```{r}
+apply(seat[sapply(seat, is.numeric)], 2, mySummary)
+```
+
+### ADVANCED REGRESSION
+
+You will be using the data set stored in carSeats6NA.csv file for the 
+regression model in this part. You have already read this data earlier 
+during the initial work as
+seat <- read.csv("carSeats691NA.csv").
+
+After comparing the performances of the regression models, you have 
+preferred to use the following log-log regression model to predict 
+the sales.
+
+log(Y) = log(X1) + log(X2) + log(X3) + log(X4), 
+where Y = sales, X1=price, X2=compPrice, X3=income, and X4=advertising
+
+(21) Run the log-log regression model (M4) and display the summary 
+    regression output.
+```{r}
+M4 <- lm(log(sales) ~ log(price) + log(compPrice) + log(income) + log(advertising), data = seat)
+summary(M4)
+
+```
+
+(22) What is the (log) regression equation?
+**Answer:** 
+log(sales)=0.96342−0.66674⋅log(price)+0.88038⋅log(compPrice)+0.05756⋅log(income)+0.10243⋅log(advertising)
+
+
+(23) What is the coefficient of the "price" variable equal to in this
+     log-log regression model? What does this coefficient indicate (tell)?     
+**Answer:**     
+Coefficient of log(price) = -0.66674. 
+In a log-log regression, the coefficients represent elasticities - that is,
+the percentage change in the dependent variable (in this case, sales) for a 1% 
+change in the independent variable.
+
+Thus, a 1% increase in price is associated with approximately a 0.67% decrease 
+in sales, holding all other variables constant.The negative relationship makes
+sense: as the price increases, fewer people are likely to buy the product, 
+leading to lower sales. 
+
+
+(24) What is the R squared value for this model? 
+     What does this R squared value indicate?
+**Answer:**    
+The R-squared for this model is 0.4421. Indicating, that approximatly of 44.21% 
+of the variability in the log of sales can be explained by the log of price, 
+log of competitor's price, log of income, and log of advertising. 
+
+This siggests a moderate level of explanatory power, it also means that 
+~ 55.79% of the variation in sales is due to other factors not included in the 
+model. 
+
+
+(25) Calculate 95% confidence interval estimate for the mean car seat
+     sale of all car seats with the following values:       
+          price=116,  compPrice=125, income=70, advertising=10
+```{r}
+newdata <- data.frame(price = 116, compPrice = 125, income = 70, advertising = 10)
+log_preds <- predict(M4, newdata = newdata, interval = "confidence")
+exp(log_preds)
+```
+
+#### wordcloud USING TEXT MINING
+Part of the reviews posted on Amazon by the users of "echo" is given 
+in "echo691.csv" file.
+
+Do the following:   
+#### Note you do not need to do all text mining/sentiment analyses tasks.    
+#### Do only the tasks asked in Questions 26a, 26b, and 27 to
+#### print the wordcloud only as asked in Question 28.
+Note:     
+#### You do not need to create the objects "text2" and "words".     
+#### You do not need to built (create) the TermDocumentMatrix (tdm)    
+
+(26) Read the text reviews from "echo691.txt" file.
+```{r}
+reviews <- readLines("echo691.txt")
+```
+
+(27a) Create the corpus.
+```{r}
+# install.packages("tm")
+library(tm)
+corpus <- Corpus(VectorSource(reviews))
+```
+
+(27b) Clean the corpus.       
+Do not print out the corpus "inspect(corpus)" after each cleaning process.     
+It will create too many pages.    
+To observe the output, if you print out the result (ouput) after each 
+cleaning operation, delete (x out) these outputs before you create the 
+html file.
+```{r}
+corpus <- tm_map(corpus, content_transformer(tolower))
+corpus <- tm_map(corpus, removePunctuation)
+corpus <- tm_map(corpus, removeNumbers)
+corpus <- tm_map(corpus, removeWords, stopwords("english"))
+corpus <- tm_map(corpus, stripWhitespace)
+```
+
+(28) Display word frequencies using wordcloud.     
+Use the following options in wordcloud:
+
+set.seed(123)                  
+wordcloud(corpus,             
+         max.words=150,       
+         min.freq=1,         
+         random.order=F,      
+         color=rainbow(3),    
+         scale=c(4.0,0.1),    
+         rot.per=0.20)       
+```{r}
+# install.packages("wordcloud")
+library(wordcloud)
+set.seed(123)
+wordcloud(corpus,
+          max.words = 150,
+          min.freq = 1,
+          random.order = FALSE,
+          colors = rainbow(3),
+          scale = c(4.0, 0.1),
+          rot.per = 0.20)
+```
+
+#### SIMULATION
+
+One of the products manufactured by the National View Company 
+is wireless security camera (WSC).
+
+The variable labor cost per unit is uniformly distributed between $4 
+and $6. 
+
+Material cost per unit has a triangle distribution between $3 to $6 with 
+the most likely price of $5.
+
+Fixed costs for the wireless security camera are $3,000 per month. 
+
+The selling price for the wireless security camera is uniformly distributed 
+between $25 and $30.
+
+The company estimates that monthly demand for the wireless security 
+camera depends on the market conditions in that month. Based on historical 
+market research, the market has an equal probability of being either
+"High" or "Low" in any given month.
+
+If the market condition is "high", the monthly demand is normally distributed 
+with a mean of 400 and a standard deviation of 10 units.      
+If the market condition is "Low", the monthly demand is normally distributed 
+with a mean of 300 and a standard deviation of 5 units.  
+
+##Task   
+Simulate 3000 trials to determine the monthly profits. 
+Use set.seed(1) to initialize the random numbers before generating 
+the values for the uncertain variables in the problem.  
+     
+(30) Simulation of 3000 trials to determine the profits.     
+     Write the necessary R code to simulate this problem for 3,000 months.
+```{r}
+set.seed(1)
+
+# number of trials 
+n <- 3000
+
+#market conditions: "High" or "Low"
+market_condition <- sample(c("High", "Low"), size = n, replace = TRUE)
+
+# Demand based on market condition
+demand <- ifelse(market_condition == "High",
+                 rnorm(n, mean = 400, sd = 10),
+                 rnorm(n, mean = 300, sd = 5))
+
+# labor cost: unform between 4 & 6
+labor_cost <- runif(n, min = 4, max = 6)
+
+# Material cost: Triangle distribution between 3 and 6 with mode 5
+# install.packages("triangle")
+library(triangle)
+material_cost <- rtriangle(n, a = 3, b = 6, c = 5)
+
+# Selling price: Uniform between 25 and 30
+price <- runif(n, min = 25, max = 30)
+
+# Fixed cost
+fixed_cost <- 3000
+
+# Total cost and revenue
+total_cost <- fixed_cost + demand * (labor_cost + material_cost)
+revenue <- demand * price
+
+# Monthly profit
+profit <- revenue - total_cost
+```
+
+Based on your simulation results, answer the following questions 
+(30a, 30b, 30c, 30d, and 30(e) outlined below.
+
+30(a) Print the first 10 monthly profit values.
+```{r}
+head(profit, 10)
+
+```
+
+30(b) Determine the proportion of months in which the market condition
+      is classified as "High" based on your simulation results.
+```{r}
+mean(market_condition == "High")
+```
+
+30(c) Display the histogram of monthly profits.
+```{r}
+hist(profit, main = "Histogram of Monthly Profits",
+     xlab = "Profit ($)", col = "skyblue", border = "white")
+```
+
+30(d) Display the Histogram of Monthly Material Costs
+```{r}
+hist(material_cost, main = "Histogram of Material Costs",
+     xlab = "Material Cost per Unit ($)", col = "lightgreen", border = "white")
+```
+
+30(e) Use the "mySummary" function that created in Question 17 above 
+    to calculate the count, mean, and the standard deviation of the profits?
+```{r}
+mySummary(profit)
+```
+
+### CREATE THE HTML FILE.
+(31) At the end, before submitting your html file, do the following:
+Step 1.Starting from the first chunk code, execute each R chunk one by one 
+      (from 1st to the last in that order)
+Step 2. Save your file "Save As.."
+This will create the html file. Please check to make sure that your html file 
+contains R codes, outputs (from the execution), and answers to the questions 
+(if there is any)
+ 
+Submit this html file as your homework 10 (final exam) on Sakai.
